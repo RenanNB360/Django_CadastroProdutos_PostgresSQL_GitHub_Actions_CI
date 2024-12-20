@@ -1,0 +1,48 @@
+name: Pipeline
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      app_database:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: app_user
+          POSTGRES_PASSWORD: app_password
+          POSTGRES_DB: app_db
+        ports:
+          - 5432:5432
+        options:
+          --health-cmd="pg_isready -U app_user"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DATABASE_URL: postgresql://app_user:app_password@localhost:5432/app_db
+
+    steps:
+      - name: Copia os arquivos do repósitorio
+        uses: actions/checkout@v3
+
+      - name: Instalar o Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar o pipx
+        run: python3 -m pip install --user pipx
+
+      - name: instalar o Poetry
+        run: pipx install poetry
+      
+      - name: Instalar as Dependências
+        run: poetry install
+
+      - name: Instala as Dependências de Dev
+        run: poetry install --with dev
+      
+      - name: Executar Testes
+        run: poetry run pytest

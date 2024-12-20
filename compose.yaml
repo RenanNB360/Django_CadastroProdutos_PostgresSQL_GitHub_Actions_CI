@@ -1,0 +1,26 @@
+services:
+  app_database:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: app_user
+      POSTGRES_DB: app_db
+      POSTGRES_PASSWORD: app_password
+    ports:
+      - "5432:5432"
+
+  django_postgres_container:
+    image: django_postgres
+    entrypoint: ./entrypoint.sh
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - app_database
+    environment:
+      DATABASE_URL: postgresql://app_user:app_password@localhost:5432/app_db
+      DJANGO_SETTINGS_MODULE: backend.settings
+      PYTHONUNBUFFERED: 1
+
+
+volumes:
+  pgdata:
